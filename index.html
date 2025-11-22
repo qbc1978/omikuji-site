@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>今どんな気持ちですか？</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      padding: 40px 10px;
+    }
+    h1 {
+      margin-bottom: 16px;
+    }
+    .question {
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+    }
+    .mood-row {
+      margin-bottom: 8px;
+    }
+    .mood-link {
+      border: none;
+      background: none;
+      color: #0066cc;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 1.3rem;
+      margin: 0 12px;
+      padding: 4px 8px;
+    }
+    .mood-link:focus {
+      outline: none;
+    }
+    img {
+      display: block;                /* ブロック要素にする */
+      width: min(30vw); /* 画像少し小さめ */
+      height: auto;
+      margin: 24px auto 16px; 
+    }
+    #omikuji-text {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      white-space: pre-line;
+      min-height: 3em;
+    }
+
+#omikuji-image {
+  display: block;
+  width: min(60vw, 400px);
+  height: auto;
+  margin: 24px auto 16px;
+
+  border: 4px solid #ffffff;                 /* 白いフチ */
+  border-radius: 16px;                       /* 角丸 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* うっすら影 */
+  box-sizing: border-box;
+}
+
+  </style>
+</head>
+<body>
+  <h1>今どんな気持ちですか？</h1>
+
+  <div class="mood-row">
+    <button class="mood-link" onclick="drawOmikuji('joy')">喜</button>
+    <button class="mood-link" onclick="drawOmikuji('anger')">怒</button>
+
+    <button class="mood-link" onclick="drawOmikuji('sad')">哀</button>
+    <button class="mood-link" onclick="drawOmikuji('fun')">楽</button>
+  </div>
+
+  <!-- 最初はダミー画像 or 何も表示しなくてもOK -->
+  <img id="omikuji-image" src="images/1.png" alt="おみくじ" style="display:none;">
+  <p id="omikuji-text">上の気持ちをクリックしてください。</p>
+
+  <p class="fixed-link">
+    <a href="https://note.com/unknowninterview/n/n9e057d37e9cc"
+       target="_blank" rel="noopener noreferrer">
+      インタビュー参加者募集中！
+    </a>
+  </p>
+
+  <noscript>
+    <p>ブラウザの設定でJavaScriptが無効になっているため、結果を表示できません。</p>
+  </noscript>
+
+  <script>
+    const IMAGE_COUNT = 64;
+
+    // 各感情ごとの番号範囲
+    const moodRanges = {
+      joy:   { start:  1, end: 16 }, // 喜
+      anger: { start: 17, end: 32 }, // 怒
+      sad:   { start: 33, end: 48 }, // 哀
+      fun:   { start: 49, end: 64 }  // 楽
+    };
+
+    // 各番号に対応するメッセージ（1〜64）
+    // 上から順に 1 → images/1.png, 2 → images/2.png, ... 64 → images/64.png
+const messages = [
+  '<a href="https://note.com/unknowninterview/n/n2b39bebebb9f" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nbab790a6503b" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n51c867cabc71" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n45f10dda4f81" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n6c3008c67c54" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/ncdf86585194d" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n2289ed3be45e" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nb3efe2007b8d" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nf9979ea9cc6e" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/na9b8045fbee5" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n41b2a3a29613" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n18cae770ed46" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n2b9c550e9073" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nbd70c089429c" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n7b298c0e3160" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n6c3008c67c54" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n78552f48da5d" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n78552f48da5d" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/ne988a7379c03" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n6c3008c67c54" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n4eca2000b323" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n978d308c8fb0" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n3471b6e656b4" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n7b298c0e3160" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n27cb47882a0d" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n0ccf7e0f10c6" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n853de0ba52a4" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nf93625e1ac64" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nfac6099a99f7" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nc8546c581435" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n587031edad9a" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n6b90191bb3c2" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/ned2885487c1b" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/ned2885487c1b" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/ne988a7379c03" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n51e7dfadd7f8" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n71a058c1f4a7" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n3471b6e656b4" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/na9b8045fbee5" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n851b2da2c666" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n851b2da2c666" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n851b2da2c666" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n0ccf7e0f10c6" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n0ccf7e0f10c6" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n0ccf7e0f10c6" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nd858babf42f1" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nc8eaee6cf435" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n527345e09311" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/neb964899c5d7" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/neb964899c5d7" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n997782507877" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nb05b380ba12b" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/ncdf86585194d" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n4eca2000b323" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n4eca2000b323" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n4eca2000b323" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/nb98fd41a2356" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n8255f8d8f9f6" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n8255f8d8f9f6" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n8cc1361b5064" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/ne8ec007673d1" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n527345e09311" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n848756d61031" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+  '<a href="https://note.com/unknowninterview/n/n6e6a8efce2cd" target="_blank" rel="noopener noreferrer">元のインタビュー記事はこちら！</a>',
+];
+
+    if (messages.length !== IMAGE_COUNT) {
+      console.warn('messages の要素数と IMAGE_COUNT が一致していません');
+    }
+
+    // 番号を受け取って、画像＋テキストを表示する関数
+    function showResult(number) {
+      const img = document.getElementById('omikuji-image');
+      const text = document.getElementById('omikuji-text');
+
+      const imagePath = `images/${number}.png`;
+      const index = number - 1;
+
+      img.src = imagePath;
+      img.alt = `おみくじ ${number}`;
+      img.style.display = 'block'; // 最初は非表示にしていたのを出す
+
+    text.innerHTML = messages[index] || `No.${number} の結果です`;
+    }
+
+    // 感情ごとに呼び出される関数
+    function drawOmikuji(moodKey) {
+      const range = moodRanges[moodKey];
+      if (!range) {
+        console.error('不明な mood:', moodKey);
+        return;
+      }
+
+      const { start, end } = range;
+      const count = end - start + 1;           // 16枚ぶん
+      const offset = Math.floor(Math.random() * count); // 0〜15
+      const number = start + offset;           // start〜end のどれか
+
+      showResult(number);
+    }
+  </script>
+</body>
+</html>
